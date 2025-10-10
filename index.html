@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Document</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #D5DBDB;
+      display: flex; justify-content: center; align-items: center;
+      height: 100vh; font-family: Arial, sans-serif;
+    }
+    .container {
+      width: 1200px; height: 500px; background: #FAFAFA;
+      border-radius: 20px; display: flex;
+      justify-content: center; align-items: center;
+      position: relative; overflow: hidden;
+    }
+    .container h1 {
+      position: absolute; top: 13px; left: 100px; color: #F24E1E;
+    }
+    .box {
+      width: 100%; height: 100%;
+      display: flex; justify-content: center; align-items: center;
+      flex-wrap: wrap; padding: 50px;
+    }
+    .box li {
+      width: 400px; height: 100px; background: #4169E1;
+      border-radius: 8px; margin: 20px; display: inline-flex;
+      justify-content: center; align-items: center;
+      list-style: none; cursor: pointer; color: white;
+      font-size: 18px; transition: 0.3s;
+    }
+    .box li:hover { background: #5a82f0; }
+
+    /* PDF Viewer Area */
+    .pdf-viewer { width: 100%; height: 100%; display: none; flex-direction: column; }
+    .top-bar {
+      height: 50px; background: #4169E1; color: white;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+    }
+    .menu { position: relative; }
+    .menu button {
+      background: none; border: none; color: white;
+      font-size: 18px; cursor: pointer;
+    }
+    .dropdown {
+      display: none; position: absolute; top: 40px; left: 0;
+      background: white; border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden;
+    }
+    .dropdown button {
+      display: block; width: 180px; padding: 10px;
+      background: none; border: none; text-align: left;
+      cursor: pointer; font-size: 14px; color: #333;
+    }
+    .dropdown button:hover { background: #f1f1f1; }
+    .pdf-container { flex: 1; background: #000; }
+    .pdf-container iframe { width: 100%; height: 100%; border: none; }
+    .cancel-btn {
+      background: red; border: none; color: white;
+      padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Documents</h1>
+
+    <!-- List Box -->
+    <div class="box" id="listBox">
+      <li onclick="openPDF('file:///C:/Users/pc/Documents/World%20Documents/Personal%20ID.pdf')">Personal ID</li>
+      <li onclick="openPDF('file:///C:/Users/pc/Documents/World%20Documents/Education.pdf')">Education</li>
+      <li onclick="openPDF('file:///C:/Users/pc/Documents/World%20Documents/Jobs%20documents.pdf')">Job</li>
+      <li onclick="openPDF('file:///C:/Users/pc/Documents/World%20Documents/Vehicles%20Documents.pdf')">Vehicles</li>
+    </div>
+
+    <!-- PDF Viewer -->
+    <div class="pdf-viewer" id="pdfViewer">
+      <div class="top-bar">
+        <div class="menu">
+          <button onclick="toggleMenu()">☰ Menu</button>
+          <div class="dropdown" id="dropdownMenu">
+            <button onclick="copyLink()">📋 Copy PDF Link</button>
+            <button onclick="sharePDF()">📤 Share PDF</button>
+            <button onclick="downloadPDF()">⬇️ Download PDF</button>
+          </div>
+        </div>
+        <button class="cancel-btn" onclick="closePDF()">Cancel</button>
+      </div>
+      <div class="pdf-container">
+        <iframe id="pdfFrame" src=""></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openPDF(file) {
+      document.getElementById("listBox").style.display = "none";
+      document.getElementById("pdfViewer").style.display = "flex";
+      document.getElementById("pdfFrame").src = file;
+    }
+    function closePDF() {
+      document.getElementById("pdfViewer").style.display = "none";
+      document.getElementById("listBox").style.display = "flex";
+    }
+    function toggleMenu() {
+      let menu = document.getElementById("dropdownMenu");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+    function copyLink() {
+      let link = document.getElementById("pdfFrame").src;
+      navigator.clipboard.writeText(link);
+      alert("PDF link copied!");
+    }
+    function sharePDF() {
+      let link = document.getElementById("pdfFrame").src;
+      if (navigator.share) {
+        navigator.share({
+          title: "PDF Document",
+          text: "Check out this PDF:",
+          url: link
+        }).catch(err => console.log("Share canceled", err));
+      } else {
+        alert("Sharing not supported in this browser.\nPDF Link: " + link);
+      }
+    }
+    function downloadPDF() {
+      let link = document.createElement("a");
+      link.href = document.getElementById("pdfFrame").src;
+      link.download = "document.pdf";
+      link.click();
+    }
+  </script>
+</body>
+</html>
