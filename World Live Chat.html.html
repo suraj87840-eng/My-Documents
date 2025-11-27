@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Chat</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial;
+  background: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container { display: flex; gap: 20px; }
+
+.left-box {
+  width: 700px;
+  height: 450px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+.right-box {
+  width: 400px;
+  height: 450px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+#chatBox {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fafafa;
+}
+
+.msg {
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  max-width: 70%;
+  font-size: 14px;
+  display: inline-block;
+}
+
+.right { background: #d1f5d3; float: right; clear: both; }
+
+.tick { font-size: 10px; margin-left: 6px; color: grey; }
+
+.composer {
+  display: flex; align-items: center; gap: 10px; margin-top: 10px;
+}
+
+textarea {
+  width: 80%; height: 56px; resize: none;
+  border-radius: 8px; border: 1px solid #ccc;
+  padding: 10px 40px 10px 10px; font-size: 14px;
+}
+
+.media-btn {
+  position: absolute; left: 85%; top: 50%;
+  transform: translateY(-50%); font-size: 20px;
+  background: none; border: none; cursor: pointer;
+}
+
+.voice {
+  width: 40px; height: 40px;
+  background-color: lightskyblue;
+  border-radius: 4px;
+}
+
+.send-btn {
+  width: 40px; height: 40px;
+  border-radius: 8px; font-size: 20px;
+  cursor: pointer;
+}
+
+.left-controls {
+  position: absolute; bottom: -60px; left: 0; width: 100%;
+  display: flex; justify-content: center; gap: 20px;
+}
+
+.ctrl-btn {
+  padding: 8px 18px; border-radius: 6px;
+  border: none; cursor: pointer;
+  background: #333; color: #fff;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- LEFT BOX -->
+  <div class="left-box">
+    <div class="left-controls">
+      <button class="ctrl-btn">Call End</button>
+      <button class="ctrl-btn">Speaker</button>
+      <button class="ctrl-btn">Answer</button>
+    </div>
+  </div>
+
+  <!-- RIGHT BOX -->
+  <div class="right-box">
+
+    <div id="chatBox"></div>
+
+    <div class="composer" style="position:relative; display:flex; align-items:center; gap:10px; overflow:visible;">
+      <div style="position:relative; flex:1;">
+        <textarea id="messageInput" placeholder="Type message..."></textarea>
+        <button class="media-btn" id="mediaBtn">📎</button>
+        <input type="file" id="mediaInput" style="display:none" multiple>
+      </div>
+
+      <button class="voice"><img src="file:///C:/Users/pc/Downloads/voice.png" width="25px"></button>
+
+      <button class="send-btn" id="sendBtn">➡️</button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- CHAT & MEDIA SCRIPT -->
+<script>
+// SEND TEXT MESSAGE
+sendBtn.addEventListener("click", () => {
+  const input = document.getElementById("messageInput");
+  const text = input.value.trim();
+  const chatBox = document.getElementById("chatBox");
+
+  if (text === "") return;
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg right";
+  bubble.innerHTML = `${text} <span class='tick'>✔✔</span>`;
+  chatBox.appendChild(bubble);
+
+  input.value = "";
+  chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+// MEDIA SEND
+mediaBtn.addEventListener("click", () => mediaInput.click());
+
+mediaInput.addEventListener("change", () => {
+  const files = mediaInput.files;
+  const chatBox = document.getElementById("chatBox");
+
+  [...files].forEach(file => {
+    const url = URL.createObjectURL(file);
+
+    const bubble = document.createElement("div");
+    bubble.className = "msg right";
+
+    if (file.type.startsWith("image")) {
+      bubble.innerHTML = `<img src='${url}' style='max-width:120px;border-radius:8px;'> <span class='tick'>✔✔</span>`;
+    } else if (file.type.startsWith("video")) {
+      bubble.innerHTML = `<video src='${url}' controls style='max-width:150px;border-radius:8px;'></video> <span class='tick'>✔✔</span>`;
+    }
+
+    chatBox.appendChild(bubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+});
+</script>
+
+<!-- MEDIA VIEWER -->
+<div id="mediaViewer" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; z-index:9999;">
+  <div id="viewerContent" style="max-width:90%; max-height:90%;"></div>
+</div>
+
+<script>
+// MEDIA CLICK VIEWER
+function enableMediaPreview(container){
+    container.addEventListener('click', e => {
+        if (["IMG","VIDEO","AUDIO"].includes(e.target.tagName)) {
+            const modal = document.getElementById('mediaViewer');
+            const box = document.getElementById('viewerContent');
+
+            let clone = e.target.cloneNode(true);
+            clone.style.maxWidth = '100%';
+            clone.style.maxHeight = '100%';
+            clone.controls = true;
+
+            box.innerHTML = '';
+            box.appendChild(clone);
+
+            modal.style.display = 'flex';
+        }
+    });
+}
+
+enableMediaPreview(document.getElementById('chatBox'));
+
+document.getElementById('mediaViewer').onclick = () =>
+    document.getElementById('mediaViewer').style.display = 'none';
+</script>
+
+<!-- VOICE RECORD SCRIPT -->
+<script>
+let audioContext;
+let mediaStream;
+let recorder;
+let audioChunks = [];
+const voiceBtn = document.querySelector(".voice");
+const chatBox = document.getElementById("chatBox");
+
+// WAV ENCODER
+function encodeWAV(samples, sampleRate) {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+
+    function writeString(v, offset, str) {
+        for (let i = 0; i < str.length; i++) {
+            v.setUint8(offset + i, str.charCodeAt(i));
+        }
+    }
+
+    writeString(view, 0, "RIFF");
+    view.setUint32(4, 36 + samples.length * 2, true);
+    writeString(view, 8, "WAVE");
+    writeString(view, 12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true); 
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(view, 36, "data");
+    view.setUint32(40, samples.length * 2, true);
+
+    let offset = 44;
+    for (let i = 0; i < samples.length; i++, offset += 2) {
+        let s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, s * 0x7fff, true);
+    }
+    return new Blob([view], { type: "audio/wav" });
+}
+
+// START RECORDING
+async function startRecording() {
+    try {
+        audioContext = new AudioContext();
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const source = audioContext.createMediaStreamSource(mediaStream);
+
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+        processor.onaudioprocess = (e) => {
+            audioChunks.push(...e.inputBuffer.getChannelData(0));
+        };
+
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+        voiceBtn.style.background = "#4cc2ff";
+
+        recorder = processor;
+
+    } catch (err) {
+        alert("Microphone Error: " + err);
+    }
+}
+
+// STOP RECORDING
+function stopRecording() {
+    if (!recorder) return;
+
+    const wavBlob = encodeWAV(audioChunks, 44100);
+    const audioURL = URL.createObjectURL(wavBlob);
+
+    audioChunks = [];
+    recorder.disconnect();
+    mediaStream.getTracks().forEach(t => t.stop());
+    voiceBtn.style.background = "lightskyblue";
+
+    const bubble = document.createElement("div");
+    bubble.className = "msg right";
+    bubble.innerHTML = `
+        <audio controls style="max-width:220px;">
+            <source src="${audioURL}" type="audio/wav">
+        </audio>
+        <span class="tick">✔✔</span>
+    `;
+    chatBox.appendChild(bubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// EVENTS
+voiceBtn.addEventListener("mousedown", startRecording);
+voiceBtn.addEventListener("mouseup", stopRecording);
+
+voiceBtn.addEventListener("touchstart", e => { e.preventDefault(); startRecording(); });
+voiceBtn.addEventListener("touchend", e => { e.preventDefault(); stopRecording(); });
+
+</script>
+
+</body>
+</html>
