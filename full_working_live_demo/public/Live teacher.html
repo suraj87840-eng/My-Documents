@@ -1,0 +1,175 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Teacher - Live Class</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font-family:Arial;margin:20px;background:#fff}
+.top{display:flex;gap:20px;align-items:center}
+video{background:#000;border-radius:8px}
+#localVideo{width:480px;height:320px}
+.controls{display:flex;flex-direction:column;gap:8px}
+.waiting{margin-top:12px;padding:10px;background:#f0f0f0;border-radius:8px;max-width:600px}
+.studentItem{padding:8px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center}
+.btn{padding:6px 10px;border-radius:6px;background:#1a73e8;color:#fff;border:none;cursor:pointer}
+.btn-danger{background:#e53935}
+.chat{margin-top:16px;padding:10px;background:#f7f9fc;border-radius:8px;max-width:600px}
+</style>
+</head>
+<body>
+<h2>Teacher Panel</h2>
+<div class="top">
+  <div>
+    <video id="localVideo" autoplay muted playsinline></video>
+    <div style="margin-top:8px;">
+      <button id="startCamBtn" class="btn">Start Camera</button>
+      <button id="startLiveBtn" class="btn" style="margin-left:8px">Start Live (Enable Streaming)</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div><strong>Waiting / Requests</strong></div>
+    <div id="waitingList" class="waiting">No waiting students</div>
+    <div style="margin-top:8px;">
+      <button id="endBtn" class="btn btn-danger">End Class</button>
+    </div>
+  </div>
+</div>
+
+<div class="chat">
+  <div><strong>Chat</strong></div>
+  <div id="chatBox" style="max-height:200px;overflow:auto;margin-top:8px"></div>
+  <div style="margin-top:8px">
+    <input id="msg" placeholder="Message to class" style="padding:8px;width:60%">
+    <button id="sendBtn" class="btn">Send</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+let localStream = null;
+const pcs = new Map(); // pc per studentId
+
+document.getElementById('startCamBtn').onclick = async () => {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    document.getElementById('localVideo').srcObject = localStream;
+  } catch (e) {
+    alert('Camera error: ' + e.message);
+  }
+};
+
+document.getElementById('startLiveBtn').onclick = () => {
+  if (!localStream) {
+    alert('Start camera first');
+    return;
+  }
+  socket.emit('teacher-join');
+  alert('You are now teacher (signaling ready). Students can request to join.');
+};
+
+socket.on('teacher-ready', () => {
+  console.log('Server acknowledges teacher ready');
+});
+
+// When student requests to join -> show in waiting list
+socket.on('student-waiting', ({ id }) => {
+  const list = document.getElementById('waitingList');
+  const div = document.createElement('div');
+  div.className = 'studentItem';
+  div.id = 'wait-' + id;
+  div.innerHTML = '<span>' + id + '</span><span><button class="btn" onclick="accept(\''+id+'\')">Allow</button></span>';
+  list.appendChild(div);
+});
+
+// Accept student -> create PeerConnection and send offer
+window.accept = async (studentId) => {
+  // create peer connection for this student
+  const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+  pcs.set(studentId, pc);
+
+  // add tracks
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      socket.emit('ice-candidate', { targetId: studentId, candidate: e.candidate });
+    }
+  };
+
+  // create offer
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  socket.emit('offer', { studentId, sdp: pc.localDescription });
+  // notify server teacher accepted (server will mark student accepted)
+  socket.emit('teacher-accept', { studentId });
+
+  // handle answer from student
+  socket.on('answer', async ({ sdp, studentId: sid }) => {
+    if (sid !== studentId) return;
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+      console.log('Remote description set for', sid);
+    } catch (err) {
+      console.error('Error setting remote desc', err);
+    }
+  });
+
+  // handle incoming ICE candidates from student
+  socket.on('ice-candidate', async ({ from, candidate }) => {
+    if (from !== studentId) return;
+    try {
+      if (candidate) await pc.addIceCandidate(candidate);
+    } catch (e) {
+      console.error('Error adding candidate', e);
+    }
+  });
+
+  // remove from waiting UI
+  const el = document.getElementById('wait-' + studentId);
+  if (el) el.remove();
+};
+
+// Chat
+document.getElementById('sendBtn').onclick = () => {
+  const m = document.getElementById('msg').value.trim();
+  if (!m) return;
+  socket.emit('chat', m);
+  document.getElementById('msg').value = '';
+};
+socket.on('chat', ({ from, msg }) => {
+  const box = document.getElementById('chatBox');
+  const d = document.createElement('div');
+  d.textContent = (from === socket.id ? 'You' : from) + ': ' + msg;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+});
+
+// raised hand notification
+socket.on('raised-hand', ({ studentId }) => {
+  const list = document.getElementById('waitingList');
+  const div = document.createElement('div');
+  div.className = 'studentItem';
+  div.innerHTML = '<span>Raised: ' + studentId + '</span><span><button class="btn" onclick="accept(\''+studentId+'\')">Allow</button></span>';
+  list.appendChild(div);
+});
+
+// student disconnected
+socket.on('student-disconnected', ({ id }) => {
+  const el = document.getElementById('wait-' + id);
+  if (el) el.remove();
+});
+
+// End class
+document.getElementById('endBtn').onclick = () => {
+  // close all pcs
+  pcs.forEach((pc) => { try { pc.close(); } catch(e){} });
+  pcs.clear();
+  socket.emit('end-class');
+  alert('Class ended (signaling only)');
+};
+</script>
+</body>
+</html>
