@@ -398,33 +398,11 @@
                 margin-left: 0;
             }
 
-            /* Bottom Sheet for Mobile Menu */
+            /* Removed Bottom Sheet - using consistent dropdown instead */
             .dropdown-menu {
-                position: fixed;
-                top: auto;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                border-radius: 20px 20px 0 0;
-                transform: translateY(100%);
-                transition: transform 0.3s ease-out;
-                display: block;
-                /* Control visibility with transform */
-                visibility: hidden;
-                border: none;
-                box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
-            }
-
-            .dropdown-menu.active {
-                transform: translateY(0);
-                visibility: visible;
-            }
-
-            .dropdown-menu button {
-                padding: 18px 24px;
-                font-size: 16px;
-                border-bottom: 1px solid #f3f4f6;
+                left: 30px;
+                right: auto;
+                width: 180px;
             }
 
             .btn span {
@@ -563,14 +541,21 @@
             const encName = "UmFqdmVlciBOYW5kYQ=="; // Rajveer Nanda
             const encPass = "UmFqdmVlciBOYW5kYTg0MzE="; // Rajveer Nanda8431
 
-            if (btoa(name) === encName && btoa(pass) === encPass) {
-                showViewer();
-                // Clear fields for next time
-                document.getElementById("userName").value = "";
-                document.getElementById("userPassword").value = "";
-            } else {
-                alert("Invalid Name or Password. Access Denied.");
+            if (btoa(name) !== encName) {
+                alert("Invalid Name. Please check and try again.");
+                return;
             }
+
+            if (btoa(pass) !== encPass) {
+                alert("Invalid Password. Please check and try again.");
+                return;
+            }
+
+            // If both are correct
+            showViewer();
+            // Clear fields for next time
+            document.getElementById("userName").value = "";
+            document.getElementById("userPassword").value = "";
         }
 
         function togglePasswordVisibility() {
@@ -605,30 +590,16 @@
 
         function toggleMenu() {
             const menu = document.getElementById("dropdownMenu");
-            const overlay = document.getElementById("menuOverlay");
-            const isMobile = window.innerWidth <= 768;
-
-            if (isMobile) {
-                menu.classList.toggle("active");
-                overlay.classList.toggle("active");
-            } else {
-                menu.style.display = menu.style.display === "block" ? "none" : "block";
-            }
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
         }
 
         // Close dropdown when clicking outside
         window.onclick = function (event) {
             const menu = document.getElementById("dropdownMenu");
-            const overlay = document.getElementById("menuOverlay");
             const menuBtn = document.getElementById("menuBtn");
 
             if (!menuBtn.contains(event.target) && !menu.contains(event.target)) {
-                if (window.innerWidth <= 768) {
-                    menu.classList.remove("active");
-                    overlay.classList.remove("active");
-                } else {
-                    menu.style.display = "none";
-                }
+                menu.style.display = "none";
             }
         }
 
