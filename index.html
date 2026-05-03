@@ -1,287 +1,629 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>World Document</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Document - Premium Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --accent: #f59e0b;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass: rgba(255, 255, 255, 0.9);
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
 
-    body {
-      background: #D5DBDB;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: Arial, sans-serif;
-      padding: 10px;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .container {
-      width: 100%;
-      max-width: 1200px;
-      height: 90vh;
-      background: #FAFAFA;
-      border-radius: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Outfit', sans-serif;
+            padding: 20px;
+            color: var(--text-main);
+        }
 
-    .container h1 {
-      position: absolute;
-      top: 13px;
-      left: 30px;
-      color: #F24E1E;
-      font-size: 24px;
-    }
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            min-height: 85vh;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
 
-    .box {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-      padding: 60px 20px;
-      overflow-y: auto;
-    }
+        header {
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
 
-    .box li {
-      width: 300px;
-      height: 90px;
-      background: #4169E1;
-      border-radius: 8px;
-      margin: 15px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      list-style: none;
-      cursor: pointer;
-      color: white;
-      font-size: 18px;
-      text-align: center;
-      transition: 0.3s;
-    }
+        header h1 {
+            color: var(--primary);
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
 
-    .box li:hover {
-      background: #5a82f0;
-      transform: scale(1.03);
-    }
+        .document-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            padding: 40px;
+            overflow-y: auto;
+            flex: 1;
+        }
 
-    /* PDF Viewer */
-    .pdf-viewer {
-      width: 100%;
-      height: 100%;
-      display: none;
-      flex-direction: column;
-    }
+        .doc-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
 
-    .top-bar {
-      height: 50px;
-      background: #4169E1;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 15px;
-      flex-wrap: wrap;
-    }
+        .doc-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow);
+            border-color: var(--primary);
+        }
 
-    .menu {
-      position: relative;
-    }
+        .doc-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(79, 70, 229, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            color: var(--primary);
+            font-size: 24px;
+        }
 
-    .menu button {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 18px;
-      cursor: pointer;
-    }
+        .doc-card span {
+            font-weight: 500;
+            font-size: 17px;
+        }
 
-    .dropdown {
-      display: none;
-      position: absolute;
-      top: 40px;
-      left: 0;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      overflow: hidden;
-      z-index: 10;
-    }
+        /* PDF Viewer Styling */
+        .pdf-viewer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+            animation: slideUp 0.4s ease-out;
+        }
 
-    .dropdown button {
-      display: block;
-      width: 180px;
-      padding: 10px;
-      background: none;
-      border: none;
-      text-align: left;
-      cursor: pointer;
-      font-size: 14px;
-      color: #333;
-    }
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
 
-    .dropdown button:hover {
-      background: #f1f1f1;
-    }
+            to {
+                transform: translateY(0);
+            }
+        }
 
-    .pdf-container {
-      flex: 1;
-      background: #000;
-      width: 100%;
-    }
+        .viewer-header {
+            height: 70px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
 
-    .pdf-container iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
+        .viewer-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
 
-    .cancel-btn {
-      background: red;
-      border: none;
-      color: white;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
+        .btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    /* 📱 Responsive Design */
-    @media (max-width: 768px) {
-      .container {
-        height: auto;
-        border-radius: 12px;
-        flex-direction: column;
-      }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
 
-      .container h1 {
-        position: static;
-        margin-top: 10px;
-        font-size: 20px;
-      }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
 
-      .box {
-        padding: 20px;
-        flex-direction: column;
-      }
+        .btn-outline {
+            background: #f3f4f6;
+            color: var(--text-main);
+        }
 
-      .box li {
-        width: 90%;
-        height: 70px;
-        font-size: 16px;
-        margin: 10px 0;
-      }
+        .btn-outline:hover {
+            background: #e5e7eb;
+        }
 
-      .top-bar {
-        flex-direction: column;
-        height: auto;
-        padding: 8px;
-      }
+        .btn-close {
+            background: #fee2e2;
+            color: #ef4444;
+        }
 
-      .menu button {
-        font-size: 16px;
-      }
+        .btn-close:hover {
+            background: #fecaca;
+        }
 
-      .cancel-btn {
-        margin-top: 6px;
-      }
-    }
+        .dropdown-container {
+            position: relative;
+        }
 
-    @media (max-width: 480px) {
-      .box li {
-        width: 100%;
-        font-size: 15px;
-        height: 65px;
-      }
-      .container h1 {
-        font-size: 18px;
-        text-align: center;
-      }
-    }
-  </style>
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 10px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            width: 220px;
+            overflow: hidden;
+            z-index: 110;
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            padding: 14px 20px;
+            text-align: left;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-main);
+        }
+
+        .dropdown-menu button:hover {
+            background: #f9fafb;
+            color: var(--primary);
+        }
+
+        .pdf-frame-container {
+            flex: 1;
+            background: #f3f4f6;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Login Modal Styling */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            animation: fadeInScale 0.3s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .login-card h2 {
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .login-card p {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .btn-cancel-login {
+            width: 100%;
+            background: transparent;
+            color: var(--text-muted);
+            margin-top: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                min-height: 95vh;
+                border-radius: 16px;
+            }
+
+            header {
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 22px;
+            }
+
+            .document-grid {
+                padding: 20px;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .doc-card {
+                padding: 16px;
+            }
+
+            .doc-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .doc-card span {
+                font-size: 14px;
+            }
+
+            .viewer-header {
+                padding: 0 16px;
+                height: 60px;
+            }
+
+            .viewer-actions {
+                margin-left: 0;
+            }
+
+            /* Bottom Sheet for Mobile Menu */
+            .dropdown-menu {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                border-radius: 20px 20px 0 0;
+                transform: translateY(100%);
+                transition: transform 0.3s ease-out;
+                display: block;
+                /* Control visibility with transform */
+                visibility: hidden;
+                border: none;
+                box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            .dropdown-menu.active {
+                transform: translateY(0);
+                visibility: visible;
+            }
+
+            .dropdown-menu button {
+                padding: 18px 24px;
+                font-size: 16px;
+                border-bottom: 1px solid #f3f4f6;
+            }
+
+            .btn span {
+                display: none;
+                /* Hide text on small screens for some buttons */
+            }
+
+            .btn-close span {
+                display: inline;
+            }
+
+            /* Keep cancel text */
+
+            /* Overlay for mobile menu */
+            .menu-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.4);
+                z-index: 105;
+                backdrop-filter: blur(2px);
+            }
+
+            .menu-overlay.active {
+                display: block;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .document-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .viewer-actions .btn-outline {
+                padding: 10px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>Documents</h1>
+    <div class="container">
+        <header>
+            <h1>My Documents</h1>
+        </header>
 
-    <div class="box" id="listBox">
-      <li onclick="openPDF('Personal%20ID.pdf')">Personal ID</li>
-      <li onclick="openPDF('Education.pdf')">Education</li>
-      <li onclick="openPDF('Jobs%20documents.pdf')">Job</li>
-      <li onclick="openPDF('Vehicles%20Documents.pdf')">Vehicles</li>
-    </div>
-
-    <div class="pdf-viewer" id="pdfViewer">
-      <div class="top-bar">
-        <div class="menu">
-          <button onclick="toggleMenu()">☰</button>
-          <div class="dropdown" id="dropdownMenu">
-            <button onclick="copyLink()">📋 Copy PDF Link</button>
-            <button onclick="sharePDF()">📤 Share PDF</button>
-            <button onclick="downloadPDF()">⬇️ Download PDF</button>
-          </div>
+        <div class="document-grid" id="listBox">
+            <div class="doc-card" onclick="openPDF('Personal%20ID.pdf')">
+                <div class="doc-icon">🆔</div>
+                <span>Personal ID</span>
+            </div>
+            <div class="doc-card" onclick="openPDF('Education.pdf')">
+                <div class="doc-icon">🎓</div>
+                <span>Education</span>
+            </div>
+            <div class="doc-card" onclick="openPDF('Jobs%20documents.pdf')">
+                <div class="doc-icon">💼</div>
+                <span>Job Documents</span>
+            </div>
+            <div class="doc-card" onclick="openPDF('Vehicles%20Documents.pdf')">
+                <div class="doc-icon">🚗</div>
+                <span>Vehicles</span>
+            </div>
         </div>
-        <button class="cancel-btn" onclick="closePDF()">Cancel</button>
-      </div>
-      <div class="pdf-container">
-        <iframe id="pdfFrame" src=""></iframe>
-      </div>
+
+        <!-- Login Overlay -->
+        <div class="login-overlay" id="loginOverlay">
+            <div class="login-card">
+                <h2>Secure Access</h2>
+                <p>Please login to view this document</p>
+                <div class="input-group">
+                    <label for="userName">Name</label>
+                    <input type="text" id="userName" placeholder="Enter your name">
+                </div>
+                <div class="input-group">
+                    <label for="userPassword">Password</label>
+                    <input type="password" id="userPassword" placeholder="Enter password">
+                </div>
+                <button class="btn btn-primary btn-login" onclick="handleLogin()">Login</button>
+                <button class="btn-cancel-login" onclick="closeLogin()">Cancel</button>
+            </div>
+        </div>
+
+        <!-- PDF Viewer Overlay -->
+        <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+        <div class="pdf-viewer" id="pdfViewer">
+            <div class="viewer-header">
+                <div class="viewer-actions">
+                    <div class="dropdown-container">
+                        <button class="btn btn-outline" id="menuBtn" onclick="toggleMenu()">☰
+                            <span>Options</span></button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <button onclick="copyLink()">📋 Copy Link</button>
+                            <button onclick="sharePDF()">📤 Share</button>
+                            <button onclick="downloadPDF()">⬇️ Download</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-close" onclick="closePDF()">✕ <span>Cancel</span></button>
+            </div>
+            <div class="pdf-frame-container">
+                <iframe id="pdfFrame" src=""></iframe>
+            </div>
+        </div>
     </div>
-  </div>
 
+    <script>
+        let pendingPDF = "";
 
-  <script>
-    function openPDF(file) {
-      document.getElementById("listBox").style.display = "none";
-      document.getElementById("pdfViewer").style.display = "flex";
-      document.getElementById("pdfFrame").src = file;
-    }
+        function openPDF(file) {
+            pendingPDF = file;
+            document.getElementById("loginOverlay").style.display = "flex";
+            document.body.style.overflow = "hidden";
+        }
 
-    function closePDF() {
-      document.getElementById("pdfViewer").style.display = "none";
-      document.getElementById("listBox").style.display = "flex";
-    }
+        function closeLogin() {
+            document.getElementById("loginOverlay").style.display = "none";
+            document.body.style.overflow = "auto";
+            document.getElementById("userName").value = "";
+            document.getElementById("userPassword").value = "";
+        }
 
-    function toggleMenu() {
-      let menu = document.getElementById("dropdownMenu");
-      menu.style.display = menu.style.display === "block" ? "none" : "block";
-    }
+        function handleLogin() {
+            const name = document.getElementById("userName").value;
+            const pass = document.getElementById("userPassword").value;
 
-    function copyLink() {
-      let link = document.getElementById("pdfFrame").src;
-      navigator.clipboard.writeText(link);
-      alert("PDF link copied!");
-    }
+            // Encrypted (Base64) Credentials for Rajveer Nanda / Rajveer Nanda8431
+            const encName = "UmFqdmVlciBOYW5kYQ=="; // Rajveer Nanda
+            const encPass = "UmFqdmVlciBOYW5kYTg0MzE="; // Rajveer Nanda8431
 
-    function sharePDF() {
-      let link = document.getElementById("pdfFrame").src;
-      if (navigator.share) {
-        navigator.share({
-          title: "PDF Document",
-          text: "Check out this PDF:",
-          url: link
-        }).catch(err => console.log("Share canceled", err));
-      } else {
-        alert("Sharing not supported in this browser.\nPDF Link: " + link);
-      }
-    }
+            if (btoa(name) === encName && btoa(pass) === encPass) {
+                showViewer();
+                // Clear fields for next time
+                document.getElementById("userName").value = "";
+                document.getElementById("userPassword").value = "";
+            } else {
+                alert("Invalid Name or Password. Access Denied.");
+            }
+        }
 
-    function downloadPDF() {
-      let link = document.createElement("a");
-      link.href = document.getElementById("pdfFrame").src;
-      link.download = "document.pdf";
-      link.click();
-    }
-  </script>
+        function showViewer() {
+            const viewer = document.getElementById("pdfViewer");
+            const frame = document.getElementById("pdfFrame");
+            const overlay = document.getElementById("loginOverlay");
+
+            frame.src = pendingPDF;
+            overlay.style.display = "none";
+            viewer.style.display = "flex";
+        }
+
+        function closePDF() {
+            const viewer = document.getElementById("pdfViewer");
+            viewer.style.display = "none";
+            document.getElementById("pdfFrame").src = "";
+            document.body.style.overflow = "auto";
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById("dropdownMenu");
+            const overlay = document.getElementById("menuOverlay");
+            const isMobile = window.innerWidth <= 768;
+
+            if (isMobile) {
+                menu.classList.toggle("active");
+                overlay.classList.toggle("active");
+            } else {
+                menu.style.display = menu.style.display === "block" ? "none" : "block";
+            }
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function (event) {
+            const menu = document.getElementById("dropdownMenu");
+            const overlay = document.getElementById("menuOverlay");
+            const menuBtn = document.getElementById("menuBtn");
+
+            if (!menuBtn.contains(event.target) && !menu.contains(event.target)) {
+                if (window.innerWidth <= 768) {
+                    menu.classList.remove("active");
+                    overlay.classList.remove("active");
+                } else {
+                    menu.style.display = "none";
+                }
+            }
+        }
+
+        function copyLink() {
+            let link = document.getElementById("pdfFrame").src;
+            navigator.clipboard.writeText(link);
+            alert("Link copied to clipboard!");
+        }
+
+        function sharePDF() {
+            let link = document.getElementById("pdfFrame").src;
+            if (navigator.share) {
+                navigator.share({
+                    title: "Document",
+                    text: "Check out this document:",
+                    url: link
+                }).catch(err => console.log("Share failed", err));
+            } else {
+                alert("Share link: " + link);
+            }
+        }
+
+        function downloadPDF() {
+            const frame = document.getElementById("pdfFrame");
+            if (!frame.src) return;
+
+            let link = document.createElement("a");
+            link.href = frame.src;
+            link.download = "document.pdf";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
 </body>
+
 </html>
-
-
-
